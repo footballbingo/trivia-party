@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0b1020" />
+<title>Higher or Lower — Population Blitz</title>
+<link rel="icon" href="assets/app-icon.png" />
+<link rel="apple-touch-icon" href="assets/app-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#141b34; --card:#1c2545; --card2:#232e56;
+    --accent:#ffd23f; --accent2:#ff8a3d; --green:#2fd47a; --red:#ff5470;
+    --text:#eef1ff; --muted:#8b94c0; --line:#2a3663;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%;}
+  body{
+    font-family:'Montserrat',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:linear-gradient(rgba(11,16,32,.55),rgba(11,16,32,.82)),url('assets/bg-higherlower.png') center/cover no-repeat #0b1020;
+    color:var(--text); overflow:hidden; user-select:none;
+    display:flex; justify-content:center;
+  }
+  #app{width:100%; max-width:520px; height:100dvh; display:flex; flex-direction:column; position:relative;}
+
+  /* ---------- Screens ---------- */
+  .screen{position:absolute; inset:0; display:flex; flex-direction:column; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;}
+  .screen.active{opacity:1; pointer-events:auto;}
+
+  /* ---------- Start ---------- */
+  #start{justify-content:center; align-items:center; text-align:center; gap:8px;}
+  .logo{font-size:15px; letter-spacing:.32em; color:var(--accent); font-weight:800; text-transform:uppercase;}
+  #start h1{font-size:40px; line-height:1.02; margin:6px 0 2px; font-weight:900;
+    background:linear-gradient(180deg,#fff, #b8c2ef); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  #start .sub{color:var(--muted); font-size:16px; max-width:320px; margin-bottom:8px;}
+  .rules{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;
+    text-align:left; font-size:14.5px; color:#cdd4f5; max-width:340px; margin:10px 0 22px; line-height:1.7;}
+  .rules b{color:var(--accent);}
+  .btn{border:none; cursor:pointer; font-weight:800; color:#20160a;
+    background:linear-gradient(180deg,var(--accent),var(--accent2));
+    padding:17px 40px; border-radius:16px; font-size:19px; letter-spacing:.02em;
+    box-shadow:0 10px 30px rgba(255,138,61,.35); transition:transform .08s ease;}
+  .btn:active{transform:scale(.96);}
+
+  /* ---------- Top bar ---------- */
+  .top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:7px 12px; min-width:74px; text-align:center;}
+  .stat .k{font-size:10px; letter-spacing:.12em; color:var(--muted); text-transform:uppercase;}
+  .stat .v{font-size:20px; font-weight:900; margin-top:1px;}
+  .streak .v{color:var(--accent);}
+  .timerwrap{height:9px; background:var(--card); border-radius:99px; overflow:hidden; border:1px solid var(--line); margin:4px 2px 12px;}
+  #timerbar{height:100%; width:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .1s linear;}
+
+  .prompt{text-align:center; font-size:14px; letter-spacing:.06em; color:var(--muted); text-transform:uppercase; font-weight:700; margin-bottom:10px;}
+  .prompt b{color:var(--text);}
+
+  /* ---------- Cards ---------- */
+  #cards{flex:1; display:flex; flex-direction:column; gap:14px; min-height:0;}
+  .card{flex:1; background:linear-gradient(180deg,var(--card2),var(--card)); border:1.5px solid var(--line);
+    border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px; cursor:pointer; position:relative; overflow:hidden; transition:transform .08s ease, border-color .2s, box-shadow .2s;}
+  .card:active{transform:scale(.985);}
+  .card .flag{width:132px; height:88px; object-fit:cover; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,.45); background:#0c1330;}
+  .card .name{font-size:21px; font-weight:800; text-align:center; padding:0 14px;}
+  .card .pop{font-size:15px; font-weight:800; color:var(--muted); height:20px; opacity:0; transition:opacity .25s; letter-spacing:.02em;}
+  .card.reveal .pop{opacity:1;}
+  .card.correct{border-color:var(--green); box-shadow:0 0 0 2px var(--green), 0 12px 30px rgba(47,212,122,.25);}
+  .card.correct .pop{color:var(--green);}
+  .card.wrong{border-color:var(--red); box-shadow:0 0 0 2px var(--red);}
+  .card.wrong .pop{color:var(--red);}
+  .vs{position:absolute; top:calc(50% - 4px); left:50%; transform:translate(-50%,-50%); z-index:3;
+    font-weight:900; font-size:15px; color:#0b1020; background:var(--accent); width:40px; height:40px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.4); border:3px solid var(--bg);}
+
+  .skip{margin-top:14px; align-self:center; background:transparent; border:1.5px solid var(--line); color:var(--muted);
+    padding:12px 30px; border-radius:14px; font-size:15px; font-weight:800; cursor:pointer; letter-spacing:.03em;}
+  .skip:active{transform:scale(.96);} .skip:disabled{opacity:.4;}
+
+  .float{position:absolute; z-index:5; font-weight:900; font-size:26px; pointer-events:none;
+    left:50%; top:38%; transform:translateX(-50%); opacity:0;}
+  .float.go{animation:pop 1s ease forwards;}
+  @keyframes pop{0%{opacity:0; transform:translate(-50%,10px) scale(.7);}
+    25%{opacity:1; transform:translate(-50%,-8px) scale(1.1);}
+    100%{opacity:0; transform:translate(-50%,-46px) scale(1);}}
+
+  /* ---------- End ---------- */
+  #end{justify-content:center; align-items:center; text-align:center; gap:6px;}
+  #end .big{font-size:16px; letter-spacing:.2em; color:var(--muted); text-transform:uppercase; font-weight:800;}
+  #end .score{font-size:64px; font-weight:900; margin:2px 0 4px;
+    background:linear-gradient(180deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .grid{display:flex; gap:12px; margin:16px 0 26px;}
+  .gcell{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 20px; min-width:96px;}
+  .gcell .k{font-size:11px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase;}
+  .gcell .v{font-size:26px; font-weight:900; margin-top:3px;}
+  .foot{position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:11px; color:#59628f;}
+</style>
+</head>
+<body>
+<div id="app"><a href="index.html" aria-label="Home" style="position:fixed;top:8px;left:8px;z-index:200;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(11,16,32,.72);color:#eef1ff;border:1px solid #2a3663;border-radius:10px;font-size:16px;line-height:1;text-decoration:none;backdrop-filter:blur(6px);">⌂</a>
+
+  <!-- START -->
+  <section id="start" class="screen active">
+    <div class="logo">Trivia Party</div>
+    <h1>Higher or<br/>Lower</h1>
+    <div class="sub">Population Blitz — 90 seconds, as many as you can.</div>
+    <div class="rules">
+      Two countries appear. Tap the one with the <b>bigger population</b>.<br/>
+      ✅ Right = points &nbsp;·&nbsp; 🔥 build a <b>streak</b> for bonus points<br/>
+      ❌ Wrong = no points, streak resets (no penalty)<br/>
+      ⏭️ <b>Skip</b> if you have no idea — costs nothing but time
+    </div>
+    <button class="btn" id="playBtn">▶ &nbsp;PLAY</button>
+    <div class="foot">Milestone 1 · single-player prototype</div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen">
+    <div class="top">
+      <div class="stat"><div class="k">Score</div><div class="v" id="score">0</div></div>
+      <div class="stat streak"><div class="k">Streak</div><div class="v" id="streak">0</div></div>
+      <div class="stat"><div class="k">Time</div><div class="v" id="time">90</div></div>
+    </div>
+    <div class="timerwrap"><div id="timerbar"></div></div>
+    <div class="prompt">Which country has <b>MORE people?</b></div>
+    <div id="cards">
+      <div class="card" data-side="0">
+        <img class="flag" id="flag0" alt="" />
+        <div class="name" id="name0">—</div>
+        <div class="pop" id="pop0"></div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="card" data-side="1">
+        <img class="flag" id="flag1" alt="" />
+        <div class="name" id="name1">—</div>
+        <div class="pop" id="pop1"></div>
+      </div>
+      <div class="float" id="float"></div>
+    </div>
+    <button class="skip" id="skipBtn">SKIP ⏭</button>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="screen">
+    <div class="big">Time!</div>
+    <div class="score" id="finalScore">0</div>
+    <div class="grid">
+      <div class="gcell"><div class="k">Best streak</div><div class="v" id="finalStreak">0</div></div>
+      <div class="gcell"><div class="k">Correct</div><div class="v" id="finalAcc">0/0</div></div>
+    </div>
+    <button class="btn" id="againBtn">↻ &nbsp;PLAY AGAIN</button>
+    <div class="foot">Populations approx. 2024 · flags via flagcdn.com</div>
+  </section>
+
+</div>
+
+<script>
+/* ---------- Data: ~40 countries, population approx 2024 (millions*1e6) ---------- */
+const COUNTRIES = [
+  {n:"India",c:"in",p:1428000000},{n:"China",c:"cn",p:1425000000},
+  {n:"United States",c:"us",p:340000000},{n:"Indonesia",c:"id",p:277000000},
+  {n:"Pakistan",c:"pk",p:240000000},{n:"Nigeria",c:"ng",p:223000000},
+  {n:"Brazil",c:"br",p:216000000},{n:"Bangladesh",c:"bd",p:173000000},
+  {n:"Russia",c:"ru",p:144000000},{n:"Mexico",c:"mx",p:128000000},
+  {n:"Ethiopia",c:"et",p:127000000},{n:"Japan",c:"jp",p:123000000},
+  {n:"Philippines",c:"ph",p:117000000},{n:"Egypt",c:"eg",p:113000000},
+  {n:"DR Congo",c:"cd",p:102000000},{n:"Vietnam",c:"vn",p:98000000},
+  {n:"Iran",c:"ir",p:89000000},{n:"Turkey",c:"tr",p:85000000},
+  {n:"Germany",c:"de",p:84000000},{n:"Thailand",c:"th",p:72000000},
+  {n:"United Kingdom",c:"gb",p:68000000},{n:"France",c:"fr",p:68000000},
+  {n:"South Africa",c:"za",p:60000000},{n:"Italy",c:"it",p:59000000},
+  {n:"South Korea",c:"kr",p:52000000},{n:"Spain",c:"es",p:48000000},
+  {n:"Argentina",c:"ar",p:46000000},{n:"Canada",c:"ca",p:39000000},
+  {n:"Poland",c:"pl",p:38000000},{n:"Morocco",c:"ma",p:37000000},
+  {n:"Saudi Arabia",c:"sa",p:37000000},{n:"Australia",c:"au",p:26000000},
+  {n:"Netherlands",c:"nl",p:18000000},{n:"Sweden",c:"se",p:10500000},
+  {n:"Portugal",c:"pt",p:10300000},{n:"Greece",c:"gr",p:10300000},
+  {n:"Singapore",c:"sg",p:5900000},{n:"Norway",c:"no",p:5500000},
+  {n:"Ireland",c:"ie",p:5200000},{n:"New Zealand",c:"nz",p:5200000},
+  {n:"Iceland",c:"is",p:390000},
+];
+const flagURL = c => `https://flagcdn.com/w320/${c}.png`;
+
+/* ---------- Elements ---------- */
+const S = id => document.getElementById(id);
+const screens = {start:S('start'), game:S('game'), end:S('end')};
+function show(name){ Object.values(screens).forEach(s=>s.classList.remove('active')); screens[name].classList.add('active'); }
+
+const cardEls = [...document.querySelectorAll('.card')];
+const flagEls = [S('flag0'), S('flag1')];
+const nameEls = [S('name0'), S('name1')];
+const popEls  = [S('pop0'),  S('pop1')];
+
+/* ---------- Game state ---------- */
+const ROUND = 90;      // seconds
+const GAP   = 0.05;    // min 5% population gap between a pair
+let score, streak, bestStreak, correct, answered, timeLeft, tick, locked;
+let current, nextPair, lastKey = "";
+
+function fmt(n){
+  if(n>=1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'')+"B";
+  if(n>=1e6) return (n/1e6).toFixed(n>=1e8?0:1).replace(/\.0$/,'')+"M";
+  return (n/1e3).toFixed(0)+"K";
+}
+function rand(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+/* pick a valid pair: distinct, >=5% gap, not the same unordered pair twice in a row */
+function makePair(){
+  for(let i=0;i<200;i++){
+    const a = rand(COUNTRIES);
+    const b = rand(COUNTRIES);
+    if(a===b) continue;
+    const gap = Math.abs(a.p-b.p)/Math.max(a.p,b.p);
+    if(gap < GAP) continue;
+    const key = [a.c,b.c].sort().join('-');
+    if(key===lastKey) continue;
+    // random left/right
+    const pair = Math.random()<0.5 ? [a,b] : [b,a];
+    pair.key = key;
+    return pair;
+  }
+  return [COUNTRIES[0], COUNTRIES[5]]; // fallback
+}
+function preload(pair){ pair.forEach(x=>{ const im=new Image(); im.src=flagURL(x.c); }); }
+
+function renderPair(pair){
+  current = pair; lastKey = pair.key;
+  cardEls.forEach(el=>el.classList.remove('reveal','correct','wrong'));
+  pair.forEach((x,i)=>{
+    flagEls[i].src = flagURL(x.c);
+    flagEls[i].alt = x.n;
+    nameEls[i].textContent = x.n;
+    popEls[i].textContent = "";
+  });
+  locked = false;
+  // prepare the pair after this one
+  nextPair = makePair(); preload(nextPair);
+}
+
+function floatText(txt, color){
+  const f = S('float'); f.textContent = txt; f.style.color = color;
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+}
+
+function choose(side){
+  if(locked || timeLeft<=0) return;
+  locked = true;
+  answered++;
+  const [a,b] = current;
+  const higherIdx = a.p >= b.p ? 0 : 1;
+  const isRight = side === higherIdx;
+  // reveal both populations
+  cardEls.forEach((el,i)=>{ popEls[i].textContent = fmt(current[i].p); el.classList.add('reveal'); });
+  cardEls[higherIdx].classList.add('correct');
+  if(!isRight) cardEls[side].classList.add('wrong');
+
+  if(isRight){
+    const gained = 100 + Math.min(streak*25, 100);
+    streak++; bestStreak = Math.max(bestStreak, streak);
+    correct++; score += gained;
+    floatText("+"+gained, "#2fd47a");
+  }else{
+    streak = 0;
+    floatText("MISS", "#ff5470");
+  }
+  S('score').textContent = score;
+  S('streak').textContent = streak;
+  setTimeout(nextTurn, 850);
+}
+
+function skip(){
+  if(locked || timeLeft<=0) return;
+  locked = true; streak = 0; S('streak').textContent = 0;
+  floatText("SKIP", "#8b94c0");
+  setTimeout(nextTurn, 300);
+}
+
+function nextTurn(){
+  if(timeLeft<=0){ endGame(); return; }
+  renderPair(nextPair);
+}
+
+function startTimer(){
+  timeLeft = ROUND; S('time').textContent = ROUND; S('timerbar').style.width = "100%";
+  const t0 = Date.now();
+  tick = setInterval(()=>{
+    const elapsed = (Date.now()-t0)/1000;
+    timeLeft = Math.max(0, ROUND - elapsed);
+    S('time').textContent = Math.ceil(timeLeft);
+    S('timerbar').style.width = (timeLeft/ROUND*100)+"%";
+    if(timeLeft<=0){ clearInterval(tick); if(!locked) endGame(); }
+  }, 100);
+}
+
+function startGame(){
+  score=0; streak=0; bestStreak=0; correct=0; answered=0; locked=false; lastKey="";
+  S('score').textContent=0; S('streak').textContent=0;
+  const first = makePair(); nextPair = first;
+  renderPair(first);
+  show('game');
+  startTimer();
+}
+
+function endGame(){
+  clearInterval(tick);
+  S('finalScore').textContent = score;
+  S('finalStreak').textContent = bestStreak;
+  S('finalAcc').textContent = correct+"/"+answered;
+  show('end');
+}
+
+/* ---------- Wire up ---------- */
+cardEls.forEach(el=> el.addEventListener('click', ()=>choose(+el.dataset.side)) );
+S('skipBtn').addEventListener('click', skip);
+S('playBtn').addEventListener('click', startGame);
+S('againBtn').addEventListener('click', startGame);
+</script>
+</body>
+</html>

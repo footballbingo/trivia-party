@@ -1,0 +1,16 @@
+{
+  "name": "Trivia Party",
+  "short_name": "Trivia Party",
+  "description": "Live trivia party games — football & general knowledge.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    { "src": "assets/app-icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/app-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

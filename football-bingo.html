@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0b1020" />
+<title>Football Bingo</title>
+<link rel="icon" href="assets/app-icon.png" />
+<link rel="apple-touch-icon" href="assets/app-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b1020; --card:#1c2545; --card2:#232e56; --pitch:#3b1e6e;
+    --accent:#d8ff3f; --accent2:#ffd23f; --green:#2fd47a; --red:#ff5470; --wild:#c9a3ff;
+    --text:#eef1ff; --muted:#8b94c0; --line:#2a3663;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%;}
+  body{
+    font-family:'Montserrat',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:linear-gradient(rgba(11,16,32,.5),rgba(11,16,32,.85)),url('assets/bg-bingo.png') center/cover no-repeat #0b1020;
+    color:var(--text); overflow:hidden; user-select:none; display:flex; justify-content:center;
+  }
+  #app{width:100%; max-width:520px; height:100dvh; display:flex; flex-direction:column; position:relative;}
+  .screen{position:absolute; inset:0; display:flex; flex-direction:column; padding:16px;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;}
+  .screen.active{opacity:1; pointer-events:auto;}
+
+  /* Start */
+  #start{justify-content:center; align-items:center; text-align:center; overflow-y:auto;}
+  .logo{font-size:13px; letter-spacing:.32em; color:var(--accent); font-weight:800; text-transform:uppercase;}
+  #start h1{font-size:36px; margin:6px 0 2px; font-weight:900;
+    background:linear-gradient(180deg,#fff,#b8c2ef); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .sub{color:var(--muted); font-size:14px; max-width:330px;}
+  .rules{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:15px 17px;
+    text-align:left; font-size:13.5px; color:#cdd4f5; max-width:355px; margin:15px 0 20px; line-height:1.6;}
+  .rules b{color:var(--accent);} .rules .w{color:var(--wild);}
+  .btn{border:none; cursor:pointer; font-weight:800; color:#20160a;
+    background:linear-gradient(180deg,var(--accent),var(--accent2)); padding:15px 36px; border-radius:14px;
+    font-size:17px; box-shadow:0 10px 30px rgba(216,255,63,.25); transition:transform .08s ease;}
+  .btn:active{transform:scale(.96);}
+  .btn2{background:linear-gradient(180deg,#ff8a3d,#ff5470); color:#2a0b12; box-shadow:0 10px 30px rgba(255,84,112,.3);}
+  .modepick{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+  .modenote{margin-top:14px; font-size:12.5px; color:var(--muted); max-width:330px; line-height:1.5;}
+  .modenote b{color:#ff8a3d;}
+
+  /* Player bar */
+  .pbar{background:linear-gradient(180deg,var(--pitch),#2a1550); border:1.5px solid #552a99; border-radius:16px;
+    padding:12px 14px 15px; display:flex; align-items:center; gap:12px; margin-bottom:12px;
+    position:relative; overflow:hidden;}
+  .tbar{position:absolute; left:0; right:0; bottom:0; height:5px; background:rgba(0,0,0,.35);}
+  #tfill{height:100%; width:100%; background:linear-gradient(90deg,#d8ff3f,#ffd23f); transition:width .1s linear;}
+  #tfill.low{background:linear-gradient(90deg,#ff8a3d,#ff5470);}
+  .pnum{width:44px; height:44px; border-radius:50%; background:#0e0722; color:var(--accent); flex:none;
+    display:flex; align-items:center; justify-content:center; font-weight:900; font-size:15px; border:2px solid #552a99;}
+  .pinfo{flex:1; min-width:0;}
+  .plabel{font-size:10px; letter-spacing:.14em; color:#c9a3ff; text-transform:uppercase; font-weight:800;}
+  .pname{font-size:20px; font-weight:900; line-height:1.05; margin-top:1px;}
+  .pright{text-align:right; flex:none;}
+  .skip{background:transparent; border:1.5px solid #6b4aa8; color:#d9c9ff; padding:7px 14px; border-radius:10px;
+    font-size:13px; font-weight:800; cursor:pointer;}
+  .skip:active{transform:scale(.95);}
+  .left{font-size:10.5px; color:#b9a3e0; margin-top:6px; letter-spacing:.05em; text-transform:uppercase; font-weight:700;}
+
+  .wildrow{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .wild{flex:1; background:linear-gradient(180deg,var(--wild),#a06fff); color:#1a0b33; border:none; border-radius:12px;
+    padding:11px; font-size:14px; font-weight:800; cursor:pointer; transition:transform .08s;}
+  .wild:active{transform:scale(.97);} .wild:disabled{opacity:.35; filter:grayscale(.6);}
+  .progress{font-size:13px; color:var(--muted); font-weight:800; white-space:nowrap;}
+  .progress b{color:var(--text); font-size:17px;}
+
+  /* Grid 4x4 */
+  #grid{flex:1; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr); gap:7px; min-height:0;}
+  .cell{background:linear-gradient(180deg,var(--card2),var(--card)); border:1.5px solid var(--line);
+    border-radius:11px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; text-align:center; padding:6px 4px; color:#dfe4ff; cursor:pointer;
+    position:relative; overflow:hidden; transition:transform .07s, border-color .2s, background .2s;}
+  .cell:active{transform:scale(.95);}
+  .coin{height:54%; width:auto; aspect-ratio:1; max-width:80%; border-radius:20%; overflow:hidden; flex:none;
+    border:1px solid rgba(255,255,255,.14); box-shadow:0 3px 9px rgba(0,0,0,.4); background:#0b1020;}
+  .coin img{width:100%; height:100%; object-fit:cover; display:block;}
+  .coin.badge{background:radial-gradient(circle at 50% 40%, #232e56, #10152e);}
+  .coin.badge img{object-fit:contain; padding:9%;}
+  .clabel{font-size:clamp(9px,3.1vw,13px); font-weight:700; line-height:1.1;}
+  .cell.marked{background:linear-gradient(180deg,#1e6b47,#155238); border-color:var(--green); color:#eafff3;}
+  .cell.marked::after{content:"✓"; position:absolute; top:2px; right:4px; color:var(--green); font-size:11px; font-weight:900;}
+  .cell.wildmark{background:linear-gradient(180deg,#5a3a9e,#3f2472); border-color:var(--wild);}
+  .cell.wildmark::after{color:var(--wild);}
+  .cell.flash{animation:wrong .5s ease;}
+  @keyframes wrong{0%,100%{border-color:var(--line);} 30%{border-color:var(--red); background:linear-gradient(180deg,#5a1e2e,#3a1420);}}
+
+  .toast{position:absolute; left:50%; top:44%; transform:translateX(-50%); z-index:9; font-weight:900; font-size:22px;
+    padding:10px 20px; border-radius:12px; opacity:0; pointer-events:none; white-space:nowrap;}
+  .toast.go{animation:toast 1.1s ease forwards;}
+  @keyframes toast{0%{opacity:0; transform:translate(-50%,8px) scale(.8);}20%{opacity:1; transform:translate(-50%,0) scale(1);}
+    80%{opacity:1;}100%{opacity:0;}}
+
+  /* End */
+  #end,#lose{justify-content:center; align-items:center; text-align:center;}
+  .verdict{font-size:40px; font-weight:900; margin-bottom:4px;}
+  #end .verdict{color:var(--green);} #lose .verdict{color:var(--red);}
+  .estat{color:var(--muted); font-size:14px; margin:2px 0;} .estat b{color:var(--text); font-size:18px;}
+  .egrid{display:flex; gap:14px; margin:16px 0 24px;}
+  .foot{position:absolute; bottom:9px; left:0; right:0; text-align:center; font-size:10.5px; color:#59628f; padding:0 16px;}
+</style>
+</head>
+<body>
+<div id="app"><a href="index.html" aria-label="Home" style="position:fixed;top:8px;left:8px;z-index:200;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(11,16,32,.72);color:#eef1ff;border:1px solid #2a3663;border-radius:10px;font-size:16px;line-height:1;text-decoration:none;backdrop-filter:blur(6px);">⌂</a>
+
+  <section id="start" class="screen active">
+    <div class="logo">Trivia Party</div>
+    <h1>Football Bingo</h1>
+    <div class="sub">Ball knowledge, no hints. Fill the whole card.</div>
+    <div class="rules">
+      A footballer appears — <b>name only, no flag, no photo</b>. Tap the <b>one square</b> on the 4×4 card they fill (club, country, trophy, position…).<br/><br/>
+      ✅ Right → square dabbed · fill <b>all 16</b> to win<br/>
+      ❌ Wrong → you <b>miss a turn</b> (lose the next player)<br/>
+      ⏭️ <b>Skip</b> a player safely if unsure<br/>
+      🟣 <span class="w">Wildcard</span> (once) → dab <b>every</b> square that player fills<br/>
+      ⏳ Limited players — <b>run out and you lose</b>. Spend them wisely.
+    </div>
+    <div class="modepick">
+      <button class="btn" id="playCasual">▶ &nbsp;CASUAL</button>
+      <button class="btn btn2" id="playExpert">🔥 &nbsp;EXPERT</button>
+    </div>
+    <div class="modenote"><b>Expert</b> = cult heroes &amp; deep-cut careers (Riquelme, Nedvěd, Seedorf…). No mercy.</div>
+    <div class="foot">Football prototype · name-only · Casual 28 / Expert 62 players</div>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="pbar">
+      <div class="pnum" id="pnum">1</div>
+      <div class="pinfo">
+        <div class="plabel">Now appearing</div>
+        <div class="pname" id="pname">—</div>
+      </div>
+      <div class="pright">
+        <button class="skip" id="skipBtn">SKIP ⏭</button>
+        <div class="left" id="left">28 left</div>
+      </div>
+      <div class="tbar"><div id="tfill"></div></div>
+    </div>
+    <div class="wildrow">
+      <button class="wild" id="wildBtn">🟣 Play Wildcard</button>
+      <div class="progress"><b id="marked">0</b> / 16</div>
+    </div>
+    <div id="grid"></div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <section id="end" class="screen">
+    <div class="verdict">BINGO! 🎉</div>
+    <div class="estat">Full card completed</div>
+    <div class="egrid">
+      <div class="estat">Players used<br/><b id="endUsed">0</b></div>
+      <div class="estat">Players left<br/><b id="endLeft">0</b></div>
+    </div>
+    <button class="btn" id="againBtn">↻ &nbsp;NEW CARD</button>
+    <div class="foot">Fewer players used = better. Try to beat it.</div>
+  </section>
+
+  <section id="lose" class="screen">
+    <div class="verdict">OUT OF PLAYERS</div>
+    <div class="estat" id="loseMsg">You ran out before filling the card.</div>
+    <div class="egrid">
+      <div class="estat">Squares filled<br/><b id="loseMarks">0</b>/16</div>
+      <div class="estat">Missed turns<br/><b id="loseMiss">0</b></div>
+    </div>
+    <button class="btn" id="againBtn2">↻ &nbsp;NEW CARD</button>
+    <div class="foot">Prototype · facts hand-checked · needs bigger DB for production</div>
+  </section>
+
+</div>
+
+<script>
+/* ---------- Two difficulty modes ---------- */
+const DATA = {
+  casual: {
+    label:"Casual",
+    COND:{
+      arg:"Argentina", bra:"Brazil", fra:"France", esp:"Spain", ger:"Germany", bel:"Belgium",
+      real:"Real Madrid", barca:"Barcelona", bayern:"Bayern Munich", city:"Man City", utd:"Man United",
+      pool:"Liverpool", psg:"PSG", juve:"Juventus", chelsea:"Chelsea",
+      wc:"World Cup", ucl:"Champions League", ballon:"Ballon d'Or", pltitle:"Prem. League title",
+      gk:"Goalkeeper", def:"Defender", mid:"Midfielder", fwd:"Forward",
+      msi:"Played with Messi",
+    },
+    PLAYERS:[
+      {n:"Cristiano Ronaldo", t:["real","utd","juve","ucl","ballon","pltitle","fwd"]},
+      {n:"Lionel Messi",      t:["arg","barca","psg","wc","ucl","ballon","fwd"]},
+      {n:"Neymar Jr",         t:["bra","barca","psg","ucl","fwd","msi"]},
+      {n:"Kylian Mbappé",     t:["fra","psg","real","wc","fwd","msi"]},
+      {n:"Robert Lewandowski",t:["bayern","barca","ucl","fwd"]},
+      {n:"Luka Modrić",       t:["real","ucl","ballon","mid"]},
+      {n:"Mohamed Salah",     t:["chelsea","pool","ucl","pltitle","fwd"]},
+      {n:"Kevin De Bruyne",   t:["bel","chelsea","city","ucl","pltitle","mid"]},
+      {n:"Erling Haaland",    t:["city","ucl","pltitle","fwd"]},
+      {n:"Karim Benzema",     t:["fra","real","ucl","ballon","fwd"]},
+      {n:"Sergio Ramos",      t:["esp","real","psg","wc","ucl","def","msi"]},
+      {n:"Gerard Piqué",      t:["esp","utd","barca","wc","ucl","def","msi"]},
+      {n:"Andrés Iniesta",    t:["esp","barca","wc","ucl","mid","msi"]},
+      {n:"Xavi",              t:["esp","barca","wc","ucl","mid","msi"]},
+      {n:"Thierry Henry",     t:["fra","barca","pltitle","ucl","wc","fwd","msi"]},
+      {n:"Zlatan Ibrahimović",t:["barca","psg","utd","juve","fwd","msi"]},
+      {n:"Manuel Neuer",      t:["ger","bayern","ucl","wc","gk"]},
+      {n:"Thibaut Courtois",  t:["bel","chelsea","real","ucl","pltitle","gk"]},
+      {n:"Alisson Becker",    t:["bra","pool","ucl","pltitle","gk"]},
+      {n:"Virgil van Dijk",   t:["pool","ucl","pltitle","def"]},
+      {n:"Toni Kroos",        t:["ger","bayern","real","ucl","wc","mid"]},
+      {n:"Ángel Di María",    t:["arg","real","utd","psg","juve","wc","ucl","fwd","msi"]},
+      {n:"Luis Suárez",       t:["pool","barca","ucl","fwd","msi"]},
+      {n:"Antoine Griezmann", t:["fra","barca","wc","fwd","msi"]},
+      {n:"Gareth Bale",       t:["real","ucl","fwd"]},
+      {n:"David Silva",       t:["esp","city","pltitle","mid"]},
+      {n:"N'Golo Kanté",      t:["fra","chelsea","ucl","pltitle","wc","mid"]},
+      {n:"Paul Pogba",        t:["fra","utd","juve","wc","mid"]},
+    ],
+  },
+  /* EXPERT: cult heroes & deep-cut careers · specific, harder categories · deep pool */
+  expert: {
+    label:"Expert",
+    COND:{
+      arg:"Argentina", ita:"Italy", ned:"Netherlands", por:"Portugal", ger:"Germany", fra:"France", eng:"England",
+      real:"Real Madrid", barca:"Barcelona", milan:"AC Milan", inter:"Inter Milan", juve:"Juventus",
+      lazio:"Lazio", fio:"Fiorentina", roma:"AS Roma", porto:"FC Porto", ajax:"Ajax",
+      boca:"Boca Juniors", villarreal:"Villarreal", valencia:"Valencia", sevilla:"Sevilla",
+      ballon:"Ballon d'Or", ucl:"Champions League", uefacup:"UEFA Cup / Europa Lg",
+      liberta:"Copa Libertadores", bothmilan:"Both Milan clubs",
+    },
+    PLAYERS:[
+      {n:"Clarence Seedorf",       t:["ned","ajax","real","inter","milan","ucl","bothmilan"]},
+      {n:"Edgar Davids",           t:["ned","ajax","milan","juve","barca","inter","ucl","bothmilan"]},
+      {n:"Wesley Sneijder",        t:["ned","ajax","real","inter","ucl"]},
+      {n:"Hernán Crespo",          t:["arg","lazio","inter","milan","bothmilan"]},
+      {n:"Juan Sebastián Verón",   t:["arg","lazio","inter","uefacup","liberta"]},
+      {n:"Gabriel Batistuta",      t:["arg","boca","fio","roma","inter"]},
+      {n:"Juan Román Riquelme",    t:["arg","boca","barca","villarreal","liberta"]},
+      {n:"Carlos Tevez",           t:["arg","boca","juve","liberta"]},
+      {n:"Roberto Baggio",         t:["ita","fio","juve","milan","inter","ballon","uefacup","bothmilan"]},
+      {n:"Gianluca Zambrotta",     t:["ita","juve","barca","milan"]},
+      {n:"Pavel Nedvěd",           t:["lazio","juve","ballon","uefacup"]},
+      {n:"Andriy Shevchenko",      t:["milan","ballon","ucl"]},
+      {n:"Davor Šuker",            t:["real","sevilla","ucl"]},
+      {n:"Gheorghe Hagi",          t:["real","barca","uefacup"]},
+      {n:"Deco",                   t:["por","porto","barca","ucl"]},
+      {n:"Ricardo Carvalho",       t:["por","porto","real","ucl"]},
+      {n:"Rui Costa",              t:["por","fio","milan","ucl"]},
+      {n:"Diego Forlán",           t:["villarreal","inter","uefacup"]},
+      {n:"Gaizka Mendieta",        t:["lazio","valencia"]},
+      {n:"Míchel Salgado",         t:["real","ucl"]},
+      {n:"Iván Zamorano",          t:["real","inter","sevilla"]},
+      {n:"Fernando Morientes",     t:["real","valencia","ucl"]},
+      {n:"Claude Makélélé",        t:["fra","real","ucl"]},
+      {n:"Patrick Vieira",         t:["fra","juve","inter"]},
+      {n:"Hristo Stoichkov",       t:["barca","ballon","ucl"]},
+      {n:"Rivaldo",                t:["barca","milan","ballon"]},
+      {n:"Ronaldo Nazário",        t:["barca","inter","real","milan","ballon","uefacup","bothmilan"]},
+      {n:"Luís Figo",              t:["por","barca","real","inter","ballon"]},
+      {n:"Cafu",                   t:["roma","milan","ucl"]},
+      {n:"Francesco Totti",        t:["ita","roma"]},
+      {n:"Alessandro Del Piero",   t:["ita","juve","ucl"]},
+      {n:"Zvonimir Boban",         t:["milan","ucl"]},
+      {n:"Dejan Savićević",        t:["milan","ucl"]},
+      {n:"George Weah",            t:["milan","ballon"]},
+      {n:"Marco van Basten",       t:["ned","ajax","milan","ballon","ucl"]},
+      {n:"Ruud Gullit",            t:["ned","milan","ballon","ucl"]},
+      {n:"Frank Rijkaard",         t:["ned","ajax","milan","ucl"]},
+      {n:"Dennis Bergkamp",        t:["ned","inter","ajax","uefacup"]},
+      {n:"Patrick Kluivert",       t:["ned","ajax","barca","milan","valencia","ucl"]},
+      {n:"Edwin van der Sar",      t:["ned","juve","ajax","ucl"]},
+      {n:"Andrea Pirlo",           t:["ita","milan","juve","inter","ucl","bothmilan"]},
+      {n:"Paolo Maldini",          t:["ita","milan","ucl"]},
+      {n:"Alessandro Nesta",       t:["ita","lazio","milan","ucl"]},
+      {n:"Gennaro Gattuso",        t:["ita","milan","ucl"]},
+      {n:"Filippo Inzaghi",        t:["ita","juve","milan","ucl"]},
+      {n:"Christian Vieri",        t:["ita","juve","lazio","fio","inter","milan","bothmilan"]},
+      {n:"Hidetoshi Nakata",       t:["roma","fio"]},
+      {n:"Martín Palermo",         t:["arg","boca","villarreal","liberta"]},
+      {n:"Walter Samuel",          t:["arg","boca","roma","real","inter","ucl"]},
+      {n:"Diego Milito",           t:["arg","inter","ucl"]},
+      {n:"Esteban Cambiasso",      t:["arg","real","inter","ucl"]},
+      {n:"Javier Zanetti",         t:["arg","inter","ucl","uefacup"]},
+      {n:"Gabriel Heinze",         t:["arg","real","roma"]},
+      {n:"Vítor Baía",             t:["por","porto","barca","ucl"]},
+      {n:"Dani Alves",             t:["sevilla","barca","juve","ucl","uefacup"]},
+      {n:"Lothar Matthäus",        t:["ger","inter","ballon","uefacup"]},
+      {n:"Andreas Brehme",         t:["ger","inter","uefacup"]},
+      {n:"Jürgen Klinsmann",       t:["ger","inter","uefacup"]},
+      {n:"David Trezeguet",        t:["fra","juve"]},
+      {n:"Didier Deschamps",       t:["fra","juve","valencia","ucl"]},
+      {n:"David Beckham",          t:["eng","real","milan","ucl"]},
+      {n:"Steve McManaman",        t:["eng","real","ucl"]},
+    ],
+  },
+};
+let mode='casual', COND, PLAYERS;
+
+/* nationality tiles use real flags (flagcdn); everything else uses a generated icon */
+const FLAGS = {arg:"ar",bra:"br",fra:"fr",esp:"es",ger:"de",bel:"be",ita:"it",ned:"nl",por:"pt",eng:"gb-eng"};
+const CLUB_SET = new Set(["real","barca","bayern","city","utd","pool","psg","juve","chelsea","milan","inter","lazio","fio","roma","porto","ajax","boca","villarreal","valencia","sevilla"]);
+const tileImg = id => FLAGS[id] ? `https://flagcdn.com/w320/${FLAGS[id]}.png`
+  : CLUB_SET.has(id) ? `assets/badges/${id}.png`
+  : `assets/tiles/${id}.png`;
+
+const S = id => document.getElementById(id);
+const screens = {start:S('start'),game:S('game'),end:S('end'),lose:S('lose')};
+const show = n => {Object.values(screens).forEach(s=>s.classList.remove('active')); screens[n].classList.add('active');};
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+
+let card, marked, queue, qi, used, missed, wildLeft, busy;
+const PTIME = 10;   // seconds per player
+let ptimer;
+function startPtimer(){
+  clearInterval(ptimer);
+  const fill=S('tfill'); fill.style.width='100%'; fill.classList.remove('low');
+  const t0=Date.now();
+  ptimer=setInterval(()=>{
+    const left=Math.max(0, PTIME-(Date.now()-t0)/1000);
+    fill.style.width=(left/PTIME*100)+'%';
+    if(left<=3) fill.classList.add('low');
+    if(left<=0){ clearInterval(ptimer); onTimeout(); }
+  },100);
+}
+function stopPtimer(){ clearInterval(ptimer); }
+function onTimeout(){
+  if(busy) return;
+  busy=true;
+  toast("TIME! ⏱","#ff5470");
+  setTimeout(()=>advance(false), 350);   // lose the player, no penalty
+}
+
+/* pick 16 categories that each have >=2 players in the pool (winnable) */
+function buildCard(){
+  const counts={}; Object.keys(COND).forEach(k=>counts[k]=0);
+  PLAYERS.forEach(p=>p.t.forEach(c=>counts[c]++));
+  const eligible = Object.keys(COND).filter(k=>counts[k]>=2);
+  return shuffle(eligible).slice(0,16);
+}
+function cells(){ return [...S('grid').children]; }
+
+function newGame(m){
+  if(m) mode = m;
+  COND = DATA[mode].COND; PLAYERS = DATA[mode].PLAYERS;
+  card = buildCard();
+  marked = Array(16).fill(false);
+  queue = shuffle(PLAYERS);
+  qi = 0; used = 0; missed = 0; wildLeft = 1; busy = false;
+  const g=S('grid'); g.innerHTML="";
+  card.forEach((id,i)=>{
+    const d=document.createElement('div');
+    d.className='cell'; d.dataset.i=i;
+    const coin=document.createElement('div'); coin.className='coin' + (CLUB_SET.has(id) ? ' badge' : '');
+    const img=document.createElement('img'); img.src=tileImg(id); img.alt=""; img.loading="eager";
+    coin.appendChild(img);
+    const lbl=document.createElement('div'); lbl.className='clabel'; lbl.textContent=COND[id];
+    d.appendChild(coin); d.appendChild(lbl);
+    d.addEventListener('click',()=>dab(i));
+    g.appendChild(d);
+  });
+  S('marked').textContent=0; S('wildBtn').disabled=false; S('wildBtn').textContent="🟣 Play Wildcard";
+  showPlayer();
+  show('game');
+}
+
+function cur(){ return queue[qi]; }
+function showPlayer(){
+  busy=false;
+  const p=cur();
+  S('pname').textContent=p.n;
+  S('pnum').textContent=used+1;
+  S('left').textContent=(queue.length-qi-1)+" left";
+  startPtimer();
+}
+
+function toast(txt,color){
+  const t=S('toast'); t.textContent=txt; t.style.color=color;
+  t.style.background="rgba(11,16,32,.85)"; t.style.border="1.5px solid "+color;
+  t.classList.remove('go'); void t.offsetWidth; t.classList.add('go');
+}
+
+function advance(penalty){
+  used++;
+  qi++;
+  if(penalty){ // miss a turn: the next player can't be placed
+    if(qi < queue.length){ qi++; used++; missed++; }
+  }
+  if(qi >= queue.length){ return endLose(); }
+  showPlayer();
+}
+
+function dab(i){
+  if(busy || marked[i]) return;
+  stopPtimer();
+  const id=card[i], p=cur();
+  if(p.t.includes(id)){
+    busy=true; marked[i]=true;
+    cells()[i].classList.add('marked');
+    updateMarked();
+    if(marked.every(Boolean)) return endWin();
+    setTimeout(()=>advance(false), 450);
+  }else{
+    busy=true;
+    const c=cells()[i]; c.classList.add('flash');
+    toast("WRONG — miss a turn","#ff5470");
+    setTimeout(()=>{ c.classList.remove('flash'); advance(true); }, 900);
+  }
+}
+
+function playWild(){
+  if(busy || !wildLeft) return;
+  const p=cur();
+  const hits = card.map((id,i)=>({id,i})).filter(x=>!marked[x.i] && p.t.includes(x.id));
+  if(hits.length===0){ toast("No new squares to fill","#8b94c0"); return; }
+  busy=true; wildLeft=0; stopPtimer();
+  S('wildBtn').disabled=true; S('wildBtn').textContent="Wildcard used";
+  hits.forEach(x=>{ marked[x.i]=true; cells()[x.i].classList.add('marked','wildmark'); });
+  updateMarked();
+  toast("WILDCARD ×"+hits.length,"#c9a3ff");
+  if(marked.every(Boolean)) return setTimeout(endWin,600);
+  setTimeout(()=>advance(false), 700);
+}
+
+function updateMarked(){ S('marked').textContent = marked.filter(Boolean).length; }
+function skip(){ if(busy) return; stopPtimer(); advance(false); }
+
+function endWin(){
+  stopPtimer();
+  S('endUsed').textContent=used;
+  S('endLeft').textContent=queue.length-used;
+  setTimeout(()=>show('end'), 500);
+}
+function endLose(){
+  stopPtimer();
+  S('loseMarks').textContent=marked.filter(Boolean).length;
+  S('loseMiss').textContent=missed;
+  show('lose');
+}
+
+S('playCasual').addEventListener('click', ()=>newGame('casual'));
+S('playExpert').addEventListener('click', ()=>newGame('expert'));
+S('againBtn').addEventListener('click', ()=>newGame());
+S('againBtn2').addEventListener('click', ()=>newGame());
+S('skipBtn').addEventListener('click', skip);
+S('wildBtn').addEventListener('click', playWild);
+</script>
+</body>
+</html>
