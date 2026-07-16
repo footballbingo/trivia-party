@@ -112,6 +112,9 @@
   .cell.marked::after{content:"✓"; position:absolute; top:2px; right:4px; color:var(--green); font-size:11px; font-weight:900;}
   .cell.wildmark{background:linear-gradient(180deg,#5a3a9e,#3f2472); border-color:var(--wild);}
   .cell.wildmark::after{color:var(--wild);}
+  .cell.claimed{background:linear-gradient(180deg,#33417a,#232e56); border-color:#5a6bb5;}
+  .cell.wrongmark{background:linear-gradient(180deg,#5a1e2e,#3a1420); border-color:var(--red);}
+  .cell.wrongmark::after{content:"✗"; position:absolute; top:2px; right:4px; color:var(--red); font-size:11px; font-weight:900;}
   .cell.flash{animation:wrong .5s ease;}
   @keyframes wrong{0%,100%{border-color:var(--line);} 30%{border-color:var(--red); background:linear-gradient(180deg,#5a1e2e,#3a1420);}}
 
@@ -201,7 +204,7 @@
   <section id="mpmenu" class="screen">
     <div class="logo" style="margin-top:6px;">Play with friends</div>
     <h1 style="font-size:30px;">Multiplayer</h1>
-    <div class="sub">Same card, everyone at once. First to fill it wins.</div>
+    <div class="sub">Same card. Picks lock in silently — right &amp; wrong shown at the end. Most correct wins, fastest breaks ties.</div>
     <input id="mpName" class="mpinput" maxlength="12" placeholder="Your name" />
     <div class="mpblock">
       <div class="mplabel">Create a room</div>
@@ -378,7 +381,7 @@ const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function shuffleR(arr,r){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 
-let card, marked, queue, qi, used, missed, wildLeft, busy;
+let card, marked, queue, qi, used, missed, wildLeft, busy, correctMap=[], mpStartTime=0;
 const PTIME = 10;   // seconds per player
 let ptimer;
 function startPtimer(){
@@ -416,6 +419,7 @@ function newGame(m, seed){
   const rng = (seed!=null) ? mulberry32(seed>>>0) : Math.random;
   card = buildCard(rng);
   marked = Array(16).fill(false);
+  correctMap = Array(16).fill(false);
   queue = shuffleR(PLAYERS, rng);
   qi = 0; used = 0; missed = 0; wildLeft = 1; busy = false;
   const g=S('grid'); g.innerHTML="";
@@ -432,7 +436,8 @@ function newGame(m, seed){
   });
   S('marked').textContent=0; S('wildBtn').disabled=false; S('wildBtn').textContent="🟣 Play Wildcard";
   S('oppstrip').style.display = mp ? 'flex' : 'none';
-  if(mp && roomRef && myId) roomRef.child('players/'+myId).update({marked:0,done:false});
+  if(mp){ mpStartTime = Date.now(); }
+  if(mp && roomRef && myId) roomRef.child('players/'+myId).update({marked:0,done:false,correct:0,time:null});
   showPlayer();
   show('game');
 }
@@ -467,6 +472,15 @@ function dab(i){
   if(busy || marked[i]) return;
   stopPtimer();
   const id=card[i], p=cur();
+  if(mp){
+    // Multiplayer: accept every pick silently, record correctness for the end reveal.
+    marked[i]=true; correctMap[i]=p.t.includes(id);
+    cells()[i].classList.add('claimed');
+    updateMarked();
+    if(marked.every(Boolean)) return endWin();
+    busy=true; setTimeout(()=>advance(false), 200);
+    return;
+  }
   if(p.t.includes(id)){
     busy=true; marked[i]=true;
     cells()[i].classList.add('marked');
@@ -488,7 +502,7 @@ function playWild(){
   if(hits.length===0){ toast("No new squares to fill","#8b94c0"); return; }
   busy=true; wildLeft=0; stopPtimer();
   S('wildBtn').disabled=true; S('wildBtn').textContent="Wildcard used";
-  hits.forEach(x=>{ marked[x.i]=true; cells()[x.i].classList.add('marked','wildmark'); });
+  hits.forEach(x=>{ marked[x.i]=true; if(mp){ correctMap[x.i]=true; cells()[x.i].classList.add('claimed'); } else { cells()[x.i].classList.add('marked','wildmark'); } });
   updateMarked();
   toast("WILDCARD ×"+hits.length,"#c9a3ff");
   if(marked.every(Boolean)) return setTimeout(endWin,600);
@@ -504,14 +518,14 @@ function skip(){ if(busy) return; stopPtimer(); advance(false); }
 
 function endWin(){
   stopPtimer();
-  if(mp){ mpClaimWin(); return; }
+  if(mp){ mpFinish(true); return; }
   S('endUsed').textContent=used;
   S('endLeft').textContent=queue.length-used;
   setTimeout(()=>show('end'), 500);
 }
 function endLose(){
   stopPtimer();
-  if(mp){ mpMarkOut(); return; }
+  if(mp){ mpFinish(false); return; }
   S('loseMarks').textContent=marked.filter(Boolean).length;
   S('loseMiss').textContent=missed;
   show('lose');
@@ -562,7 +576,10 @@ function subscribeRoom(){
       maybeArbitrate(data);
       return;
     }
-    if(data.state==='done'){ renderOpponents(data); showMpResult(data); }
+    if(data.state==='done'){
+      renderOpponents(data);
+      if(!mpResultShown){ mpResultShown=true; revealMpCard(); setTimeout(()=>showMpResult(data), 1900); }
+    }
   });
 }
 function renderOpponents(data){
@@ -577,37 +594,52 @@ function renderOpponents(data){
     strip.appendChild(d);
   });
 }
-function mpClaimWin(){
-  busy=true;
-  roomRef.child('players/'+myId).update({marked:16,done:true});
-  roomRef.child('winner').transaction(cur=>cur||myId).then(()=>roomRef.child('state').set('done'));
+function mpFinish(completed){
+  busy=true; stopPtimer();
+  const filled = marked.filter(Boolean).length;
+  const correct = correctMap.reduce((n,c,i)=> n + ((marked[i]&&c)?1:0), 0);
+  const time = completed ? (Date.now()-mpStartTime) : null;   // only completers get a time
+  toast(completed ? "Card full! Waiting for others…" : "Out of players — waiting…", "#c9a3ff");
+  roomRef.child('players/'+myId).update({ done:true, marked:filled, correct, time });
 }
-function mpMarkOut(){
-  busy=true;
-  toast("You're out — watching…","#8b94c0");
-  roomRef.child('players/'+myId).update({done:true, marked:marked.filter(Boolean).length});
+function mpRank(players){
+  // best first: most correct squares, then fastest completion time (non-finishers last)
+  return Object.keys(players).slice().sort((a,b)=>{
+    const pa=players[a], pb=players[b];
+    if((pb.correct||0)!==(pa.correct||0)) return (pb.correct||0)-(pa.correct||0);
+    const ta=(pa.time==null)?Infinity:pa.time, tb=(pb.time==null)?Infinity:pb.time;
+    return ta-tb;
+  });
 }
 function maybeArbitrate(data){
   if(!isHost || data.winner) return;
   const players=data.players||{}; const ids=Object.keys(players);
   if(ids.length && ids.every(id=>players[id].done)){
-    let best=ids[0];
-    ids.forEach(id=>{ if((players[id].marked||0)>(players[best].marked||0)) best=id; });
-    roomRef.update({winner:best, state:'done'});
+    roomRef.update({winner: mpRank(players)[0], state:'done'});
   }
 }
+function revealMpCard(){
+  // colour the player's own card: green = correct pick, red = wrong pick
+  cells().forEach((c,i)=>{
+    if(marked[i]){ c.classList.remove('claimed'); c.classList.add(correctMap[i] ? 'marked' : 'wrongmark'); }
+  });
+  const correct = correctMap.reduce((n,c,i)=> n + ((marked[i]&&c)?1:0), 0);
+  toast(correct+" / 16 correct", "#ffd23f");
+}
+function fmtTime(ms){ return (ms==null) ? "—" : (ms/1000).toFixed(1)+"s"; }
 function showMpResult(data){
-  if(mpResultShown) return; mpResultShown=true;
   stopPtimer();
   const players=data.players||{};
-  const ranked=Object.entries(players).sort((a,b)=>(b[1].marked||0)-(a[1].marked||0));
+  const order=mpRank(players);
   const wid=data.winner, wp=players[wid];
   S('mpWinner').textContent = wid===myId ? '🏆 You win!' : '🏆 '+((wp&&wp.name)||'Winner')+' wins!';
   const list=S('mpStandings'); list.innerHTML='';
-  ranked.forEach(([id,p],i)=>{
+  order.forEach((id,i)=>{
+    const p=players[id]||{};
     const row=document.createElement('div'); row.className='prow';
     const medal = i===0?'🥇':(i===1?'🥈':(i===2?'🥉':(i+1)+'.'));
-    row.innerHTML='<span>'+medal+' '+(p.name||'?')+(id===myId?' (you)':'')+'</span><span class="pmark">'+(p.marked||0)+'/16</span>';
+    row.innerHTML='<span>'+medal+' '+(p.name||'?')+(id===myId?' (you)':'')+'</span>'+
+      '<span class="pmark">'+(p.correct||0)+'/16 · '+fmtTime(p.time)+'</span>';
     list.appendChild(row);
   });
   S('mpAgainBtn').style.display = isHost ? 'block':'none';
