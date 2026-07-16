@@ -304,6 +304,32 @@ function buildCard(rng){
   picked=picked.concat(shuffleR(leftover,rng).slice(0,16-picked.length));
   return shuffleR(picked.slice(0,16), rng);
 }
+/* Deal a finite game queue (~60): coverage for every card square, famous-biased,
+   plus some players that fit NOTHING (skip bait) — like the reference site. */
+function buildQueue(rng){
+  const QUEUE_N=60, DUDS=16;
+  const cardSet=new Set(card);
+  const fits=p=>p.t.some(t=>cardSet.has(t));
+  const picked=new Set(), out=[];
+  const biasPick=arr=>{                       // seeded pick, biased to famous (front of list)
+    for(let k=0;k<40;k++){
+      const p=arr[Math.floor(Math.pow(rng(),1.6)*arr.length)];
+      if(p && !picked.has(p.n)){ picked.add(p.n); return p; }
+    }
+    for(const p of arr){ if(!picked.has(p.n)){ picked.add(p.n); return p; } }
+    return null;
+  };
+  card.forEach(id=>{                          // guarantee >=3 candidates per square
+    const cands=PLAYERS.filter(p=>p.t.includes(id));
+    for(let k=0;k<3;k++){ const p=biasPick(cands); if(p) out.push(p); }
+  });
+  const matchers=PLAYERS.filter(fits);
+  while(out.length<QUEUE_N-DUDS){ const p=biasPick(matchers); if(!p) break; out.push(p); }
+  const duds=PLAYERS.filter(p=>!fits(p));
+  for(let k=0;k<DUDS;k++){ const p=biasPick(duds); if(!p) break; out.push(p); }
+  return shuffleR(out,rng);
+}
+
 function cells(){ return [...S('grid').children]; }
 
 function newGame(m, seed){
@@ -314,7 +340,7 @@ function newGame(m, seed){
   card = buildCard(rng);
   marked = Array(16).fill(false);
   correctMap = Array(16).fill(false);
-  queue = shuffleR(PLAYERS, rng);
+  queue = buildQueue(rng);
   qi = 0; used = 0; missed = 0; wildLeft = 1; busy = false;
   const g=S('grid'); g.innerHTML="";
   card.forEach((id,i)=>{
