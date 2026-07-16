@@ -113,7 +113,8 @@
   .cell.marked::after{content:"✓"; position:absolute; top:2px; right:4px; color:var(--green); font-size:11px; font-weight:900;}
   .cell.wildmark{background:linear-gradient(180deg,#5a3a9e,#3f2472); border-color:var(--wild);}
   .cell.wildmark::after{color:var(--wild);}
-  .cell.claimed{background:linear-gradient(180deg,#33417a,#232e56); border-color:#5a6bb5;}
+  .cell.claimed{background:linear-gradient(180deg,#7a6420,#57460f); border-color:var(--accent2); color:#fff3d6;}
+  .cell.claimed::after{content:"●"; position:absolute; top:2px; right:5px; color:var(--accent2); font-size:10px;}
   .cell.wrongmark{background:linear-gradient(180deg,#5a1e2e,#3a1420); border-color:var(--red);}
   .cell.wrongmark::after{content:"✗"; position:absolute; top:2px; right:4px; color:var(--red); font-size:11px; font-weight:900;}
   .cell.flash{animation:wrong .5s ease;}
@@ -355,6 +356,7 @@ function newGame(m, seed){
     g.appendChild(d);
   });
   S('marked').textContent=0; S('wildBtn').disabled=false; S('wildBtn').textContent="🟣 Play Wildcard";
+  mpRevealed=false;
   S('oppstrip').style.display = mp ? 'flex' : 'none';
   if(mp){ mpStartTime = Date.now(); }
   if(mp && roomRef && myId) roomRef.child('players/'+myId).update({marked:0,done:false,correct:0,time:null});
@@ -373,7 +375,7 @@ function showPlayer(){
 }
 
 function toast(txt,color){
-  const t=S('toast'); t.textContent=txt; t.style.color=color;
+  const t=S('toast'); t.innerHTML=txt; t.style.color=color;
   t.style.background="rgba(11,16,32,.85)"; t.style.border="1.5px solid "+color;
   t.classList.remove('go'); void t.offsetWidth; t.classList.add('go');
 }
@@ -519,7 +521,7 @@ function mpFinish(completed){
   const filled = marked.filter(Boolean).length;
   const correct = correctMap.reduce((n,c,i)=> n + ((marked[i]&&c)?1:0), 0);
   const time = completed ? (Date.now()-mpStartTime) : null;   // only completers get a time
-  toast(completed ? "Card full! Waiting for others…" : "Out of players — waiting…", "#c9a3ff");
+  revealMpCard();                                             // your reveal, at your final turn
   roomRef.child('players/'+myId).update({ done:true, marked:filled, correct, time });
 }
 function mpRank(players){
@@ -538,13 +540,16 @@ function maybeArbitrate(data){
     roomRef.update({winner: mpRank(players)[0], state:'done'});
   }
 }
+let mpRevealed=false;
 function revealMpCard(){
+  if(mpRevealed) return; mpRevealed=true;
   // colour the player's own card: green = correct pick, red = wrong pick
   cells().forEach((c,i)=>{
     if(marked[i]){ c.classList.remove('claimed'); c.classList.add(correctMap[i] ? 'marked' : 'wrongmark'); }
   });
   const correct = correctMap.reduce((n,c,i)=> n + ((marked[i]&&c)?1:0), 0);
-  toast(correct+" / 16 correct", "#ffd23f");
+  const wrong = marked.filter(Boolean).length - correct;
+  toast('<span style="color:#2fd47a">✓ '+correct+' right</span> &nbsp;·&nbsp; <span style="color:#ff5470">✗ '+wrong+' wrong</span>', "#ffd23f");
 }
 function fmtTime(ms){ return (ms==null) ? "—" : (ms/1000).toFixed(1)+"s"; }
 function showMpResult(data){
