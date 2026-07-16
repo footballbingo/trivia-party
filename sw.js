@@ -20,10 +20,16 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Cache-first for our own assets; network for everything else (flags, fonts).
+// Network-first for our own files (always fresh when online); fall back to cache offline.
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.origin === self.location.origin) {
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    e.respondWith(
+      fetch(e.request).then(r => {
+        const copy = r.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy)).catch(()=>{});
+        return r;
+      }).catch(() => caches.match(e.request))
+    );
   }
 });
