@@ -1,0 +1,31 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$code": {
+        ".read": true,
+        ".write": true,
+        ".validate": "$code.matches(/^[A-Z0-9]{4}$/) && newData.hasChildren(['host','mode','state','seed','players'])",
+        "host":      { ".validate": "newData.isString() && newData.val().length <= 16" },
+        "mode":      { ".validate": "newData.val() === 'casual' || newData.val() === 'expert'" },
+        "state":     { ".validate": "newData.val() === 'lobby' || newData.val() === 'playing' || newData.val() === 'done'" },
+        "seed":      { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "winner":    { ".validate": "newData.isString() && newData.val().length <= 16" },
+        "players": {
+          "$pid": {
+            "name":    { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+            "marked":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 16" },
+            "correct": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 16" },
+            "done":    { ".validate": "newData.isBoolean()" },
+            "joined":  { ".validate": "newData.isNumber()" },
+            "time":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other":  { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
