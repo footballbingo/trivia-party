@@ -2,3 +2,4 @@
 _*.html
 *.log
 node_modules/
+pipeline/raw_cache.json

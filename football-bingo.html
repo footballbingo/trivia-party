@@ -13,6 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
+<script src="bingo-data.js"></script>
 <style>
   :root{
     --bg:#0b1020; --card:#1c2545; --card2:#232e56; --pitch:#3b1e6e;
@@ -154,7 +155,7 @@
     </div>
     <div class="modenote"><b>Expert</b> = cult heroes &amp; deep-cut careers (Riquelme, Nedvěd, Seedorf…). No mercy.</div>
     <button class="btn btn3" id="playMp">🎮 &nbsp;PLAY WITH FRIENDS</button>
-    <div class="foot">Football prototype · name-only · Casual 28 / Expert 62 players</div>
+    <div class="foot">Football prototype · name-only · database via Wikidata pipeline</div>
   </section>
 
   <section id="game" class="screen">
@@ -245,134 +246,11 @@
 </div>
 
 <script>
-/* ---------- Two difficulty modes ---------- */
-const DATA = {
-  casual: {
-    label:"Casual",
-    COND:{
-      arg:"Argentina", bra:"Brazil", fra:"France", esp:"Spain", ger:"Germany", bel:"Belgium",
-      real:"Real Madrid", barca:"Barcelona", bayern:"Bayern Munich", city:"Man City", utd:"Man United",
-      pool:"Liverpool", psg:"PSG", juve:"Juventus", chelsea:"Chelsea",
-      wc:"World Cup", ucl:"Champions League", ballon:"Ballon d'Or", pltitle:"Prem. League title",
-      gk:"Goalkeeper", def:"Defender", mid:"Midfielder", fwd:"Forward",
-      msi:"Played with Messi",
-    },
-    PLAYERS:[
-      {n:"Cristiano Ronaldo", t:["real","utd","juve","ucl","ballon","pltitle","fwd"]},
-      {n:"Lionel Messi",      t:["arg","barca","psg","wc","ucl","ballon","fwd"]},
-      {n:"Neymar Jr",         t:["bra","barca","psg","ucl","fwd","msi"]},
-      {n:"Kylian Mbappé",     t:["fra","psg","real","wc","fwd","msi"]},
-      {n:"Robert Lewandowski",t:["bayern","barca","ucl","fwd"]},
-      {n:"Luka Modrić",       t:["real","ucl","ballon","mid"]},
-      {n:"Mohamed Salah",     t:["chelsea","pool","ucl","pltitle","fwd"]},
-      {n:"Kevin De Bruyne",   t:["bel","chelsea","city","ucl","pltitle","mid"]},
-      {n:"Erling Haaland",    t:["city","ucl","pltitle","fwd"]},
-      {n:"Karim Benzema",     t:["fra","real","ucl","ballon","fwd"]},
-      {n:"Sergio Ramos",      t:["esp","real","psg","wc","ucl","def","msi"]},
-      {n:"Gerard Piqué",      t:["esp","utd","barca","wc","ucl","def","msi"]},
-      {n:"Andrés Iniesta",    t:["esp","barca","wc","ucl","mid","msi"]},
-      {n:"Xavi",              t:["esp","barca","wc","ucl","mid","msi"]},
-      {n:"Thierry Henry",     t:["fra","barca","pltitle","ucl","wc","fwd","msi"]},
-      {n:"Zlatan Ibrahimović",t:["barca","psg","utd","juve","fwd","msi"]},
-      {n:"Manuel Neuer",      t:["ger","bayern","ucl","wc","gk"]},
-      {n:"Thibaut Courtois",  t:["bel","chelsea","real","ucl","pltitle","gk"]},
-      {n:"Alisson Becker",    t:["bra","pool","ucl","pltitle","gk"]},
-      {n:"Virgil van Dijk",   t:["pool","ucl","pltitle","def"]},
-      {n:"Toni Kroos",        t:["ger","bayern","real","ucl","wc","mid"]},
-      {n:"Ángel Di María",    t:["arg","real","utd","psg","juve","wc","ucl","fwd","msi"]},
-      {n:"Luis Suárez",       t:["pool","barca","ucl","fwd","msi"]},
-      {n:"Antoine Griezmann", t:["fra","barca","wc","fwd","msi"]},
-      {n:"Gareth Bale",       t:["real","ucl","fwd"]},
-      {n:"David Silva",       t:["esp","city","pltitle","mid"]},
-      {n:"N'Golo Kanté",      t:["fra","chelsea","ucl","pltitle","wc","mid"]},
-      {n:"Paul Pogba",        t:["fra","utd","juve","wc","mid"]},
-    ],
-  },
-  /* EXPERT: cult heroes & deep-cut careers · specific, harder categories · deep pool */
-  expert: {
-    label:"Expert",
-    COND:{
-      arg:"Argentina", ita:"Italy", ned:"Netherlands", por:"Portugal", ger:"Germany", fra:"France", eng:"England",
-      real:"Real Madrid", barca:"Barcelona", milan:"AC Milan", inter:"Inter Milan", juve:"Juventus",
-      lazio:"Lazio", fio:"Fiorentina", roma:"AS Roma", porto:"FC Porto", ajax:"Ajax",
-      boca:"Boca Juniors", villarreal:"Villarreal", valencia:"Valencia", sevilla:"Sevilla",
-      ballon:"Ballon d'Or", ucl:"Champions League", uefacup:"UEFA Cup / Europa Lg",
-      liberta:"Copa Libertadores", bothmilan:"Both Milan clubs",
-    },
-    PLAYERS:[
-      {n:"Clarence Seedorf",       t:["ned","ajax","real","inter","milan","ucl","bothmilan"]},
-      {n:"Edgar Davids",           t:["ned","ajax","milan","juve","barca","inter","ucl","bothmilan"]},
-      {n:"Wesley Sneijder",        t:["ned","ajax","real","inter","ucl"]},
-      {n:"Hernán Crespo",          t:["arg","lazio","inter","milan","bothmilan"]},
-      {n:"Juan Sebastián Verón",   t:["arg","lazio","inter","uefacup","liberta"]},
-      {n:"Gabriel Batistuta",      t:["arg","boca","fio","roma","inter"]},
-      {n:"Juan Román Riquelme",    t:["arg","boca","barca","villarreal","liberta"]},
-      {n:"Carlos Tevez",           t:["arg","boca","juve","liberta"]},
-      {n:"Roberto Baggio",         t:["ita","fio","juve","milan","inter","ballon","uefacup","bothmilan"]},
-      {n:"Gianluca Zambrotta",     t:["ita","juve","barca","milan"]},
-      {n:"Pavel Nedvěd",           t:["lazio","juve","ballon","uefacup"]},
-      {n:"Andriy Shevchenko",      t:["milan","ballon","ucl"]},
-      {n:"Davor Šuker",            t:["real","sevilla","ucl"]},
-      {n:"Gheorghe Hagi",          t:["real","barca","uefacup"]},
-      {n:"Deco",                   t:["por","porto","barca","ucl"]},
-      {n:"Ricardo Carvalho",       t:["por","porto","real","ucl"]},
-      {n:"Rui Costa",              t:["por","fio","milan","ucl"]},
-      {n:"Diego Forlán",           t:["villarreal","inter","uefacup"]},
-      {n:"Gaizka Mendieta",        t:["lazio","valencia"]},
-      {n:"Míchel Salgado",         t:["real","ucl"]},
-      {n:"Iván Zamorano",          t:["real","inter","sevilla"]},
-      {n:"Fernando Morientes",     t:["real","valencia","ucl"]},
-      {n:"Claude Makélélé",        t:["fra","real","ucl"]},
-      {n:"Patrick Vieira",         t:["fra","juve","inter"]},
-      {n:"Hristo Stoichkov",       t:["barca","ballon","ucl"]},
-      {n:"Rivaldo",                t:["barca","milan","ballon"]},
-      {n:"Ronaldo Nazário",        t:["barca","inter","real","milan","ballon","uefacup","bothmilan"]},
-      {n:"Luís Figo",              t:["por","barca","real","inter","ballon"]},
-      {n:"Cafu",                   t:["roma","milan","ucl"]},
-      {n:"Francesco Totti",        t:["ita","roma"]},
-      {n:"Alessandro Del Piero",   t:["ita","juve","ucl"]},
-      {n:"Zvonimir Boban",         t:["milan","ucl"]},
-      {n:"Dejan Savićević",        t:["milan","ucl"]},
-      {n:"George Weah",            t:["milan","ballon"]},
-      {n:"Marco van Basten",       t:["ned","ajax","milan","ballon","ucl"]},
-      {n:"Ruud Gullit",            t:["ned","milan","ballon","ucl"]},
-      {n:"Frank Rijkaard",         t:["ned","ajax","milan","ucl"]},
-      {n:"Dennis Bergkamp",        t:["ned","inter","ajax","uefacup"]},
-      {n:"Patrick Kluivert",       t:["ned","ajax","barca","milan","valencia","ucl"]},
-      {n:"Edwin van der Sar",      t:["ned","juve","ajax","ucl"]},
-      {n:"Andrea Pirlo",           t:["ita","milan","juve","inter","ucl","bothmilan"]},
-      {n:"Paolo Maldini",          t:["ita","milan","ucl"]},
-      {n:"Alessandro Nesta",       t:["ita","lazio","milan","ucl"]},
-      {n:"Gennaro Gattuso",        t:["ita","milan","ucl"]},
-      {n:"Filippo Inzaghi",        t:["ita","juve","milan","ucl"]},
-      {n:"Christian Vieri",        t:["ita","juve","lazio","fio","inter","milan","bothmilan"]},
-      {n:"Hidetoshi Nakata",       t:["roma","fio"]},
-      {n:"Martín Palermo",         t:["arg","boca","villarreal","liberta"]},
-      {n:"Walter Samuel",          t:["arg","boca","roma","real","inter","ucl"]},
-      {n:"Diego Milito",           t:["arg","inter","ucl"]},
-      {n:"Esteban Cambiasso",      t:["arg","real","inter","ucl"]},
-      {n:"Javier Zanetti",         t:["arg","inter","ucl","uefacup"]},
-      {n:"Gabriel Heinze",         t:["arg","real","roma"]},
-      {n:"Vítor Baía",             t:["por","porto","barca","ucl"]},
-      {n:"Dani Alves",             t:["sevilla","barca","juve","ucl","uefacup"]},
-      {n:"Lothar Matthäus",        t:["ger","inter","ballon","uefacup"]},
-      {n:"Andreas Brehme",         t:["ger","inter","uefacup"]},
-      {n:"Jürgen Klinsmann",       t:["ger","inter","uefacup"]},
-      {n:"David Trezeguet",        t:["fra","juve"]},
-      {n:"Didier Deschamps",       t:["fra","juve","valencia","ucl"]},
-      {n:"David Beckham",          t:["eng","real","milan","ucl"]},
-      {n:"Steve McManaman",        t:["eng","real","ucl"]},
-    ],
-  },
-};
-let mode='casual', COND, PLAYERS;
-
-/* nationality tiles use real flags (flagcdn); everything else uses a generated icon */
-const FLAGS = {arg:"ar",bra:"br",fra:"fr",esp:"es",ger:"de",bel:"be",ita:"it",ned:"nl",por:"pt",eng:"gb-eng"};
-const CLUB_SET = new Set(["real","barca","bayern","city","utd","pool","psg","juve","chelsea","milan","inter","lazio","fio","roma","porto","ajax","boca","villarreal","valencia","sevilla"]);
-const tileImg = id => FLAGS[id] ? `https://flagcdn.com/w320/${FLAGS[id]}.png`
-  : CLUB_SET.has(id) ? `assets/badges/${id}.png`
-  : `assets/tiles/${id}.png`;
+/* ---------- data comes from bingo-data.js (generated by pipeline/build_db.py) ---------- */
+let mode='casual', COND=BINGO_COND, PLAYERS;
+const POOLS = { casual: BINGO_CASUAL, expert: BINGO_EXPERT };
+const tileImg = id => (BINGO_COND[id] && BINGO_COND[id].img) || `assets/tiles/${id}.png`;
+const condLabel = id => (BINGO_COND[id] && BINGO_COND[id].label) || id;
 
 const S = id => document.getElementById(id);
 const screens = {start:S('start'),game:S('game'),end:S('end'),lose:S('lose'),mpmenu:S('mpmenu'),lobby:S('lobby'),mpresult:S('mpresult')};
@@ -404,18 +282,34 @@ function onTimeout(){
 }
 
 /* pick 16 categories that each have >=2 players in the pool (winnable) */
+function condType(id){
+  if(id.startsWith('nat_')) return 'nat';
+  if(id.startsWith('lg_')) return 'lg';
+  if(['ucl','ucl2','ballon','wcwin','eurowin','copawin'].includes(id)) return 'trophy';
+  if(['gk','df','mf','fw'].includes(id)) return 'pos';
+  if(['samerica','africa'].includes(id)) return 'region';
+  return 'club';
+}
 function buildCard(rng){
   const counts={}; Object.keys(COND).forEach(k=>counts[k]=0);
-  PLAYERS.forEach(p=>p.t.forEach(c=>counts[c]++));
-  const eligible = Object.keys(COND).filter(k=>counts[k]>=2);
-  return shuffleR(eligible, rng).slice(0,16);
+  PLAYERS.forEach(p=>p.t.forEach(c=>{ if(c in counts) counts[c]++; }));
+  const byType={club:[],nat:[],lg:[],trophy:[],pos:[],region:[]};
+  Object.keys(COND).filter(k=>counts[k]>=3).forEach(k=>byType[condType(k)].push(k));
+  // balanced card, like the reference site: mostly clubs + a spread of everything else
+  const QUOTA=[['club',6],['nat',4],['lg',2],['trophy',2],['pos',1],['region',1]];
+  let picked=[];
+  QUOTA.forEach(([t,n])=>{ picked=picked.concat(shuffleR(byType[t],rng).slice(0,n)); });
+  // top up to 16 from whatever is left
+  const leftover=Object.keys(COND).filter(k=>counts[k]>=3 && !picked.includes(k));
+  picked=picked.concat(shuffleR(leftover,rng).slice(0,16-picked.length));
+  return shuffleR(picked.slice(0,16), rng);
 }
 function cells(){ return [...S('grid').children]; }
 
 function newGame(m, seed){
   if(seed==null) mp=false;            // solo game (multiplayer always passes a seed)
   if(m) mode = m;
-  COND = DATA[mode].COND; PLAYERS = DATA[mode].PLAYERS;
+  COND = BINGO_COND; PLAYERS = POOLS[mode];
   const rng = (seed!=null) ? mulberry32(seed>>>0) : Math.random;
   card = buildCard(rng);
   marked = Array(16).fill(false);
@@ -426,10 +320,10 @@ function newGame(m, seed){
   card.forEach((id,i)=>{
     const d=document.createElement('div');
     d.className='cell'; d.dataset.i=i;
-    const coin=document.createElement('div'); coin.className='coin' + (CLUB_SET.has(id) ? ' badge' : '');
+    const coin=document.createElement('div'); coin.className='coin' + (tileImg(id).indexOf('assets/badges/')===0 ? ' badge' : '');
     const img=document.createElement('img'); img.src=tileImg(id); img.alt=""; img.loading="eager";
     coin.appendChild(img);
-    const lbl=document.createElement('div'); lbl.className='clabel'; lbl.textContent=COND[id];
+    const lbl=document.createElement('div'); lbl.className='clabel'; lbl.textContent=condLabel(id);
     d.appendChild(coin); d.appendChild(lbl);
     d.addEventListener('click',()=>dab(i));
     g.appendChild(d);

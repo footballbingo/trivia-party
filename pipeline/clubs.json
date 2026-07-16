@@ -1,0 +1,254 @@
+{
+ "real": {
+  "qid": "Q8682",
+  "label": "Real Madrid Club de F\u00fatbol",
+  "desc": "association football club in Madrid, Spain",
+  "cc": "ES"
+ },
+ "barca": {
+  "qid": "Q7156",
+  "label": "FC Barcelona",
+  "desc": "football club in Barcelona, Catalonia, Spain",
+  "cc": "ES"
+ },
+ "atletico": {
+  "qid": "Q8701",
+  "label": "Atl\u00e9tico Madrid",
+  "desc": "Spanish professional football club in Madrid",
+  "cc": "ES"
+ },
+ "sevilla": {
+  "qid": "Q10329",
+  "label": "Sevilla FC",
+  "desc": "Spanish professional football club based in Seville",
+  "cc": "ES"
+ },
+ "valencia": {
+  "qid": "Q10333",
+  "label": "Valencia CF",
+  "desc": "association football club in Valencia, Spain",
+  "cc": "ES"
+ },
+ "villarreal": {
+  "qid": "Q12297",
+  "label": "Villarreal CF",
+  "desc": "association football club in Villarreal, Spain",
+  "cc": "ES"
+ },
+ "utd": {
+  "qid": "Q18656",
+  "label": "Manchester United F.C.",
+  "desc": "association football club in Manchester, England",
+  "cc": "EN"
+ },
+ "city": {
+  "qid": "Q50602",
+  "label": "Manchester City F.C.",
+  "desc": "association football club in Manchester, England",
+  "cc": "EN"
+ },
+ "pool": {
+  "qid": "Q1130849",
+  "label": "Liverpool F.C.",
+  "desc": "association football club in Liverpool, England",
+  "cc": "EN"
+ },
+ "chelsea": {
+  "qid": "Q9616",
+  "label": "Chelsea F.C.",
+  "desc": "association football club in London, England",
+  "cc": "EN"
+ },
+ "arsenal": {
+  "qid": "Q9617",
+  "label": "Arsenal F.C.",
+  "desc": "association football club in London, England",
+  "cc": "EN"
+ },
+ "spurs": {
+  "qid": "Q18741",
+  "label": "Tottenham Hotspur F.C.",
+  "desc": "association football club in London, England",
+  "cc": "EN"
+ },
+ "everton": {
+  "qid": "Q5794",
+  "label": "Everton F.C.",
+  "desc": "association football club in Liverpool, England",
+  "cc": "EN"
+ },
+ "newcastle": {
+  "qid": "Q18716",
+  "label": "Newcastle United F.C.",
+  "desc": "association football club in Newcastle upon Tyne, England",
+  "cc": "EN"
+ },
+ "westham": {
+  "qid": "Q18747",
+  "label": "West Ham United F.C.",
+  "desc": "association football club in London, England",
+  "cc": "EN"
+ },
+ "leicester": {
+  "qid": "Q19481",
+  "label": "Leicester City F.C.",
+  "desc": "association football club in Leicester, England",
+  "cc": "EN"
+ },
+ "milan": {
+  "qid": "Q1543",
+  "label": "AC Milan",
+  "desc": "football club in Milan, Italy",
+  "cc": "IT"
+ },
+ "inter": {
+  "qid": "Q631",
+  "label": "Inter Milan",
+  "desc": "association football club based in Milan, Lombardy, Italy",
+  "cc": "IT"
+ },
+ "juve": {
+  "qid": "Q1422",
+  "label": "Juventus FC",
+  "desc": "association football club in Turin, Italy",
+  "cc": "IT"
+ },
+ "roma": {
+  "qid": "Q2739",
+  "label": "AS Roma",
+  "desc": "association football club in Rome, Italy",
+  "cc": "IT"
+ },
+ "lazio": {
+  "qid": "Q2609",
+  "label": "SS Lazio",
+  "desc": "football section of the sports club based in Rome, Lazio, Italy",
+  "cc": "IT"
+ },
+ "napoli": {
+  "qid": "Q2641",
+  "label": "SSC Napoli",
+  "desc": "Italian professional football club based in Naples",
+  "cc": "IT"
+ },
+ "fio": {
+  "qid": "Q2052",
+  "label": "ACF Fiorentina",
+  "desc": "association football club in Florence, Italy",
+  "cc": "IT"
+ },
+ "bayern": {
+  "qid": "Q15789",
+  "label": "FC Bayern Munich",
+  "desc": "association football club in Munich, Germany",
+  "cc": "DE"
+ },
+ "dortmund": {
+  "qid": "Q41420",
+  "label": "Borussia Dortmund",
+  "desc": "German professional sports club based in Dortmund",
+  "cc": "DE"
+ },
+ "leverkusen": {
+  "qid": "Q104761",
+  "label": "Bayer 04 Leverkusen",
+  "desc": "association football club in Leverkusen, Germany",
+  "cc": "DE"
+ },
+ "schalke": {
+  "qid": "Q32494",
+  "label": "Schalke 04",
+  "desc": "German football club from the Schalke district of Gelsenkirchen",
+  "cc": "DE"
+ },
+ "psg": {
+  "qid": "Q483020",
+  "label": "Paris Saint-Germain FC",
+  "desc": "association football club in Paris, France having two UCL",
+  "cc": "FR"
+ },
+ "marseille": {
+  "qid": "Q132885",
+  "label": "Olympique de Marseille",
+  "desc": "association football club in Marseille, France",
+  "cc": "FR"
+ },
+ "lyon": {
+  "qid": "Q704",
+  "label": "Olympique Lyonnais",
+  "desc": "association football club in Lyon, France",
+  "cc": "FR"
+ },
+ "monaco": {
+  "qid": "Q180305",
+  "label": "AS Monaco FC",
+  "desc": "association football club in Monaco",
+  "cc": "FR"
+ },
+ "porto": {
+  "qid": "Q128446",
+  "label": "FC Porto",
+  "desc": "professional association football club based in Porto, Portugal",
+  "cc": "PT"
+ },
+ "benfica": {
+  "qid": "Q131499",
+  "label": "S.L. Benfica",
+  "desc": "Portuguese association football club",
+  "cc": "PT"
+ },
+ "sporting": {
+  "qid": "Q75729",
+  "label": "Sporting CP",
+  "desc": "Portuguese sports club",
+  "cc": "PT"
+ },
+ "ajax": {
+  "qid": "Q81888",
+  "label": "AFC Ajax",
+  "desc": "Dutch association football team",
+  "cc": "NL"
+ },
+ "psv": {
+  "qid": "Q11938",
+  "label": "PSV Eindhoven",
+  "desc": "sports club from Eindhoven, the Netherlands",
+  "cc": "NL"
+ },
+ "celtic": {
+  "qid": "Q19593",
+  "label": "Celtic F.C.",
+  "desc": "association football club in Glasgow, Scotland",
+  "cc": "SC"
+ },
+ "boca": {
+  "qid": "Q170703",
+  "label": "Boca Juniors",
+  "desc": "Argentine sports club",
+  "cc": "AR"
+ },
+ "river": {
+  "qid": "Q15799",
+  "label": "Club Atl\u00e9tico River Plate",
+  "desc": "Argentine professional sports club based in Buenos Aires",
+  "cc": "AR"
+ },
+ "rangers": {
+  "qid": "Q19597",
+  "label": "Rangers F.C.",
+  "desc": "association football club in Glasgow, Scotland",
+  "cc": "SC"
+ },
+ "galatasaray": {
+  "qid": "Q495299",
+  "label": "Galatasaray S.K.",
+  "desc": "Turkish association football team",
+  "cc": "TR"
+ },
+ "fenerbahce": {
+  "qid": "Q6601875",
+  "label": "Fenerbah\u00e7e Istanbul",
+  "desc": "association football section",
+  "cc": "TR"
+ }
+}
