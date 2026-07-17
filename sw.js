@@ -1,8 +1,11 @@
-const CACHE = 'trivia-party-v1';
+const CACHE = 'trivia-party-v2';
 const SHELL = [
   'index.html',
   'football-bingo.html',
   'higher-or-lower.html',
+  'marked-man.html',
+  'bingo-data.js',
+  'firebase-config.js',
   'manifest.json',
   'assets/app-icon.png',
   'assets/bg-bingo.png',

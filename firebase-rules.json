@@ -26,6 +26,32 @@
         },
         "$other": { ".validate": false }
       }
+    },
+    "mm": {
+      "$code": {
+        ".read": true,
+        ".write": true,
+        ".validate": "$code.matches(/^[A-Z0-9]{4}$/) && newData.hasChildren(['host','state','seed','players'])",
+        "host":      { ".validate": "newData.isString() && newData.val().length <= 16" },
+        "state":     { ".validate": "newData.val() === 'lobby' || newData.val() === 'playing' || newData.val() === 'done'" },
+        "seed":      { ".validate": "newData.isNumber()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "round":     { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 20" },
+        "phase":     { ".validate": "newData.val() === 'mark' || newData.val() === 'topic' || newData.val() === 'answer' || newData.val() === 'resolve'" },
+        "phaseAt":   { ".validate": "newData.isNumber()" },
+        "players": {
+          "$pid": {
+            "name":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+            "score":  { ".validate": "newData.isNumber()" },
+            "joined": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "marks":   { "$r": { "$pid": { ".validate": "newData.isString() && newData.val().length <= 16" } } },
+        "topics":  { "$r": { "$pid": { ".validate": "newData.isString() && newData.val().length <= 24" } } },
+        "answers": { "$r": { "$pid": { ".validate": "newData.isNumber() && newData.val() >= -1 && newData.val() <= 3" } } },
+        "$other": { ".validate": false }
+      }
     }
   }
 }
