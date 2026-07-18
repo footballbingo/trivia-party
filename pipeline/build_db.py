@@ -142,7 +142,7 @@ UCL_WINNERS = {
  1998:"real",1999:"utd",2000:"real",2001:"bayern",2002:"real",2003:"milan",2004:"porto",
  2005:"pool",2006:"barca",2007:"milan",2008:"utd",2009:"barca",2010:"inter",2011:"barca",
  2012:"chelsea",2013:"bayern",2014:"real",2015:"barca",2016:"real",2017:"real",2018:"real",
- 2019:"pool",2020:"bayern",2021:"chelsea",2022:"real",2023:"city",2024:"real",2025:"psg",
+ 2019:"pool",2020:"bayern",2021:"chelsea",2022:"real",2023:"city",2024:"real",2025:"psg",2026:"psg",
 }
 WC_WINNERS = {1986:"arg",1990:"ger",1994:"bra",1998:"fra",2002:"bra",2006:"ita",
               2010:"esp",2014:"ger",2018:"fra",2022:"arg"}
