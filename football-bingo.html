@@ -239,7 +239,8 @@
     <div class="verdict" id="mpWinner" style="color:var(--accent);">🏆</div>
     <div class="mplabel" style="margin-top:14px;">Final standings</div>
     <div id="mpStandings" class="playerlist"></div>
-    <button class="btn" id="mpAgainBtn" style="margin-top:20px;">↻ &nbsp;REMATCH</button>
+    <button class="btn" id="mpReviewBtn" style="margin-top:18px;background:linear-gradient(180deg,#8a5cf5,#6a3fd4);color:#f4edff;box-shadow:0 10px 30px rgba(138,92,245,.3);">🔍 &nbsp;REVIEW MY CARD</button>
+    <button class="btn" id="mpAgainBtn" style="margin-top:10px;">↻ &nbsp;REMATCH</button>
     <div class="mphint" id="mpAgainHint">Host can start a rematch</div>
     <button class="mpback" id="mpResultLeave">← Leave</button>
   </section>
@@ -260,7 +261,7 @@ const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function shuffleR(arr,r){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 
-let card, marked, queue, qi, used, missed, wildLeft, busy, correctMap=[], mpStartTime=0;
+let card, marked, queue, qi, used, missed, wildLeft, busy, correctMap=[], mpStartTime=0, dabbedName=[], reviewMode=false;
 const PTIME = 10;   // seconds per player
 let ptimer;
 function startPtimer(){
@@ -341,6 +342,8 @@ function newGame(m, seed){
   card = buildCard(rng);
   marked = Array(16).fill(false);
   correctMap = Array(16).fill(false);
+  dabbedName = Array(16).fill(null);
+  exitReview(true);
   queue = buildQueue(rng);
   qi = 0; used = 0; missed = 0; wildLeft = 1; busy = false;
   const g=S('grid'); g.innerHTML="";
@@ -391,12 +394,19 @@ function advance(penalty){
 }
 
 function dab(i){
+  if(reviewMode){
+    if(marked[i] && dabbedName[i])
+      toast(dabbedName[i]+(correctMap[i]?' ✅ was right':' ❌ was wrong'), correctMap[i]?'#2fd47a':'#ff5470');
+    else if(marked[i]) toast('Filled by wildcard ✅','#c9a3ff');
+    else toast('Never claimed','#8b94c0');
+    return;
+  }
   if(busy || marked[i]) return;
   stopPtimer();
   const id=card[i], p=cur();
   if(mp){
     // Multiplayer: accept every pick silently, record correctness for the end reveal.
-    marked[i]=true; correctMap[i]=p.t.includes(id);
+    marked[i]=true; correctMap[i]=p.t.includes(id); dabbedName[i]=p.n;
     cells()[i].classList.add('claimed');
     updateMarked();
     if(marked.every(Boolean)) return endWin();
@@ -424,7 +434,7 @@ function playWild(){
   if(hits.length===0){ toast("No new squares to fill","#8b94c0"); return; }
   busy=true; wildLeft=0; stopPtimer();
   S('wildBtn').disabled=true; S('wildBtn').textContent="Wildcard used";
-  hits.forEach(x=>{ marked[x.i]=true; if(mp){ correctMap[x.i]=true; cells()[x.i].classList.add('claimed'); } else { cells()[x.i].classList.add('marked','wildmark'); } });
+  hits.forEach(x=>{ marked[x.i]=true; if(mp){ correctMap[x.i]=true; dabbedName[x.i]=p.n; cells()[x.i].classList.add('claimed'); } else { cells()[x.i].classList.add('marked','wildmark'); } });
   updateMarked();
   toast("WILDCARD ×"+hits.length,"#c9a3ff");
   if(marked.every(Boolean)) return setTimeout(endWin,600);
@@ -571,6 +581,31 @@ function showMpResult(data){
   S('mpAgainHint').style.display = isHost ? 'none':'block';
   show('mpresult');
 }
+function enterReview(){
+  reviewMode=true;
+  document.querySelector('.pbar').style.display='none';
+  document.querySelector('.wildrow').style.display='none';
+  let hdr=S('reviewhdr');
+  if(!hdr){
+    hdr=document.createElement('div'); hdr.id='reviewhdr';
+    hdr.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:12px;';
+    hdr.innerHTML='<button id="reviewBack" style="flex:none;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;'+
+      'background:var(--card);color:var(--text);border:1.5px solid var(--line);border-radius:11px;padding:10px 14px;">← RESULTS</button>'+
+      '<div style="font-size:12px;color:var(--muted);font-weight:700;line-height:1.35;">Your card — tap any square to see who you claimed</div>';
+    const game=S('game'); game.insertBefore(hdr, S('grid'));
+    hdr.querySelector('#reviewBack').addEventListener('click',()=>exitReview());
+  }
+  hdr.style.display='flex';
+  show('game');
+}
+function exitReview(silent){
+  reviewMode=false;
+  const hdr=S('reviewhdr'); if(hdr) hdr.style.display='none';
+  const pb=document.querySelector('.pbar'), wr=document.querySelector('.wildrow');
+  if(pb) pb.style.display='';
+  if(wr) wr.style.display='';
+  if(!silent) show('mpresult');
+}
 function mpRematch(){
   if(!isHost || !roomRef) return;
   const players=(roomData&&roomData.players)||{};
@@ -616,6 +651,7 @@ S('mpBackStart').addEventListener('click', ()=>show('start'));
 S('startMpBtn').addEventListener('click', startAsHost);
 S('mpLeaveBtn').addEventListener('click', hardLeave);
 S('mpAgainBtn').addEventListener('click', mpRematch);
+S('mpReviewBtn').addEventListener('click', enterReview);
 S('mpResultLeave').addEventListener('click', hardLeave);
 S('againBtn').addEventListener('click', ()=>newGame());
 S('againBtn2').addEventListener('click', ()=>newGame());
